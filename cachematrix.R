@@ -14,11 +14,11 @@ makeCacheMatrix <- function(x = matrix()) {
         inv <<- NULL
     }
     get  <- function() x
-    setinverse <- function(inverse) inv <- inverse
-    getinverse <- function() inv
+    setInverse <- function(inverse) inv <<- inverse
+    getInverse <- function() inv
     list(set = set, get = get,
-         setinverse = setinverse,
-         getinverse = getinverse)
+         setInverse = setInverse,
+         getInverse = getInverse)
 }
 
 ## The second function, cacheSolve
@@ -27,23 +27,49 @@ makeCacheMatrix <- function(x = matrix()) {
 ## then cacheSolve should retrieve the inverse from the cache.
 
 cacheSolve <- function(x, ...) {
-    inv <- x$getinverse()
+    inv <- x$getInverse()
     if (!is.null(inv)){
         message("getting the cached inverse")
         return(inv)
     }
     data <- x$get()
     inv <- solve(data, ...)
-    x$setinverse(inv)
+    x$setInverse(inv)
     inv
 }
 
-x <- matrix(1:4,c(2,2))
-y <- matrix(c(1,2,2,3),c(2,2))
+#ADDED a simple test code
+a <- makeCacheMatrix(matrix(1:4,2))
+a$get()
+#       [,1] [,2]
+# [1,]    1    3
+# [2,]    2    4
+a$getInverse()
+# NULL
+a$set(matrix(5:8,2))
+a$get()
+#       [,1] [,2]
+# [1,]    5    7
+# [2,]    6    8
+cacheSolve(a)
+#     [,1] [,2]
+# [1,]   -4  3.5
+# [2,]    3 -2.5
+cacheSolve(a)
+# getting the cached inverse
+#       [,1] [,2]
+# [1,]   -4  3.5
+# [2,]    3 -2.5
+a$getInverse()
+#     [,1] [,2]
+# [1,]   -4  3.5
+# [2,]    3 -2.5
 
-x_cache <- makeCacheMatrix(x)
-cacheSolve(x_cache)
-
-
-y_cache <- makeCacheMatrix(y)
-cacheSolve(y_cache)
+#test inverse correctness
+b <- a$getInverse()
+b
+a$get() %*% b     
+#matrix multiplication should show identity matrix
+#       [,1]         [,2]
+# [1,]    1 3.552714e-15
+# [2,]    0 1.000000e+00
